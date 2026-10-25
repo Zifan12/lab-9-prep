@@ -138,7 +138,35 @@ int main() {
         //
         // Use SOFT_LIMIT_PERCENT and HARD_LIMIT_PERCENT to parameterize the green and red
         // line positions.
-        camera.setCameraCenter({player.position.x, WINDOW_HEIGHT * 0.5f});
+        float playerXPercent = camera.worldToWindowPercent(player.position).x;
+
+        if (playerXPercent > 1.f - HARD_LIMIT_PERCENT) {
+            camera.setCameraPercent(
+                player.position,
+                {1.f - HARD_LIMIT_PERCENT, camera.worldToWindowPercent(player.position).y});
+        } else if (playerXPercent < HARD_LIMIT_PERCENT) {
+            camera.setCameraPercent(
+                player.position,
+                {HARD_LIMIT_PERCENT, camera.worldToWindowPercent(player.position).y});
+        } else if (playerXPercent > 1 - SOFT_LIMIT_PERCENT) {
+            Camera cameraTarget = camera;
+            cameraTarget.setCameraPercent(
+                player.position,
+                {1 - SOFT_LIMIT_PERCENT, camera.worldToWindowPercent(player.position).y});
+            float targetX = cameraTarget.getCameraCenter().x;
+            float newX =
+                SOFT_CAMERA_ALPHA * targetX + (1 - SOFT_CAMERA_ALPHA) * camera.getCameraCenter().x;
+            camera.setCameraCenter({newX, camera.getCameraCenter().y});
+        } else if (playerXPercent < SOFT_LIMIT_PERCENT) {
+            Camera cameraTarget = camera;
+            cameraTarget.setCameraPercent(
+                player.position,
+                {SOFT_LIMIT_PERCENT, camera.worldToWindowPercent(player.position).y});
+            float targetX = cameraTarget.getCameraCenter().x;
+            float newX =
+                SOFT_CAMERA_ALPHA * targetX + (1 - SOFT_CAMERA_ALPHA) * camera.getCameraCenter().x;
+            camera.setCameraCenter({newX, camera.getCameraCenter().y});
+        }
 
         worldView.setCenter(camera.getCameraCenter());
         window.clear(sf::Color::Black);
